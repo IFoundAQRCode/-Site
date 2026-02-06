@@ -250,7 +250,7 @@ function finish() {
         return;
       }
       if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
-        sendOptionAEmail(answers, contact);
+        sendSubmissionEmail(answers, contact);
       }
       result.innerHTML = `
         <h2>Thanks</h2>
@@ -258,6 +258,9 @@ function finish() {
       `;
     });
   } else {
+    if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
+      sendSubmissionEmail(answers, null);
+    }
     result.innerHTML = `
       <h2>Unfortunately, it doesn't seem like we'd be compatible.</h2>
       <p>Thanks for taking the time to answer.</p>
@@ -265,18 +268,19 @@ function finish() {
   }
 }
 
-function sendOptionAEmail(answers, contactInfo) {
+function sendSubmissionEmail(answers, contactInfo) {
   const answersText = Object.entries(answers)
     .map(([q, a]) => `${q}: ${Array.isArray(a) ? a.join(", ") : a}`)
     .join("\n");
-  const message = `Contact information:\n${contactInfo}\n\n--- Answers ---\n${answersText}`;
+  const hasContact = contactInfo != null && contactInfo.trim() !== "";
+  const message = hasContact
+    ? `Contact information:\n${contactInfo.trim()}\n\n--- Answers ---\n${answersText}`
+    : answersText;
+  const subject = hasContact ? "Quiz: Option A – contact info" : "Quiz: Option B";
   fetch(`https://formspree.io/f/${FORMSPREE_FORM_ID}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      _subject: "Quiz: Option A – contact info",
-      message
-    })
+    body: JSON.stringify({ _subject: subject, message })
   }).catch(() => {});
 }
 
