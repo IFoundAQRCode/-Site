@@ -137,12 +137,24 @@ function renderQuestion() {
     btn.textContent = "Next";
     btn.onclick = () => {
       err.textContent = "";
-      const val = q.type === "text" ? input.value.trim() : input.value;
+      const raw = input.value;
+      const val = q.type === "text" ? raw.trim() : raw;
       if (!val) {
         err.textContent = q.type === "date" ? "Please pick a date." : "Please enter an answer.";
         return;
       }
-      answer(q.id, q.type === "text" ? val : input.value);
+      if (q.id === "birth") {
+        // Disallow future birth dates
+        const [y, m, d] = raw.split("-").map(Number);
+        const picked = new Date(y, (m || 1) - 1, d || 1);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (picked > today) {
+          err.textContent = "Please pick a date in the past.";
+          return;
+        }
+      }
+      answer(q.id, q.type === "text" ? val : raw);
     };
     group.append(input, err, btn);
   }
