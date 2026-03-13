@@ -261,16 +261,45 @@ function finish() {
     const canProtest = answers.would_like_to === "Yes" || answers.know_me === "Yes";
     if (canProtest) {
       result.innerHTML = `
-        <h2>Unfortunately, it doesn't seem like we'd be compatible.</h2>
-        <p>Thanks for taking the time to answer.</p>
-        <p>If you'd like to protest this decision, you can leave your contact information below.</p>
-        <form id="option-b-contact" class="option-group">
+        <h2>Unfortunately, it doesn't seem like we'd be compatible people.</h2>
+        <p id="option-b-extra">Thanks for taking the time to answer.</p>
+        <div class="option-group" id="option-b-actions">
+          <button type="button" id="option-b-okay">Okay</button>
+          <button type="button" id="option-b-disagree">I disagree</button>
+        </div>
+        <form id="option-b-contact" class="option-group hidden">
           <textarea id="contact-info-b" rows="3" placeholder="Email, phone, or other contact..."></textarea>
           <div class="error-msg" id="contact-error-b"></div>
-          <button type="submit">Protest</button>
+          <button type="submit">Submit</button>
         </form>
       `;
-      result.querySelector("#option-b-contact").addEventListener("submit", (e) => {
+
+      const actions = document.getElementById("option-b-actions");
+      const btnOkay = document.getElementById("option-b-okay");
+      const btnDisagree = document.getElementById("option-b-disagree");
+      const form = document.getElementById("option-b-contact");
+      const extraText = document.getElementById("option-b-extra");
+
+      btnOkay.addEventListener("click", () => {
+        if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
+          sendSubmissionEmail(answers, null);
+        }
+        result.innerHTML = `
+          <h2>Thank you</h2>
+          <p>Thanks for taking the time to answer.</p>
+        `;
+      });
+
+      btnDisagree.addEventListener("click", () => {
+        if (extraText) {
+          extraText.textContent =
+            "Alright then, your disagreement is noted. If you really feel that way, feel free to leave your contact information below.";
+        }
+        actions.classList.add("hidden");
+        form.classList.remove("hidden");
+      });
+
+      form.addEventListener("submit", (e) => {
         e.preventDefault();
         const contactEl = document.getElementById("contact-info-b");
         const errEl = document.getElementById("contact-error-b");
@@ -285,7 +314,7 @@ function finish() {
         }
         result.innerHTML = `
           <h2>Thanks</h2>
-          <p>We'll take your protest into account.</p>
+          <p>I'll take your thoughts into account.</p>
         `;
       });
     } else {
