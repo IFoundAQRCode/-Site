@@ -258,13 +258,45 @@ function finish() {
       `;
     });
   } else {
-    if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
-      sendSubmissionEmail(answers, null);
+    const canProtest = answers.would_like_to === "Yes" || answers.know_me === "Yes";
+    if (canProtest) {
+      result.innerHTML = `
+        <h2>Unfortunately, it doesn't seem like we'd be compatible.</h2>
+        <p>Thanks for taking the time to answer.</p>
+        <p>If you'd like to protest this decision, you can leave your contact information below.</p>
+        <form id="option-b-contact" class="option-group">
+          <textarea id="contact-info-b" rows="3" placeholder="Email, phone, or other contact..."></textarea>
+          <div class="error-msg" id="contact-error-b"></div>
+          <button type="submit">Protest</button>
+        </form>
+      `;
+      result.querySelector("#option-b-contact").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const contactEl = document.getElementById("contact-info-b");
+        const errEl = document.getElementById("contact-error-b");
+        const contact = contactEl.value.trim();
+        errEl.textContent = "";
+        if (!contact) {
+          errEl.textContent = "Please enter your contact information.";
+          return;
+        }
+        if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
+          sendSubmissionEmail(answers, contact);
+        }
+        result.innerHTML = `
+          <h2>Thanks</h2>
+          <p>We'll take your protest into account.</p>
+        `;
+      });
+    } else {
+      if (FORMSPREE_FORM_ID !== "YOUR_FORM_ID") {
+        sendSubmissionEmail(answers, null);
+      }
+      result.innerHTML = `
+        <h2>Unfortunately, it doesn't seem like we'd be compatible.</h2>
+        <p>Thanks for taking the time to answer.</p>
+      `;
     }
-    result.innerHTML = `
-      <h2>Unfortunately, it doesn't seem like we'd be compatible.</h2>
-      <p>Thanks for taking the time to answer.</p>
-    `;
   }
 }
 
